@@ -65,6 +65,7 @@ function handleAuthClick() {
         }
         document.getElementById('signout_button').style.visibility = 'visible';
         document.getElementById('criarReuniao_button').style.visibility = 'visible';
+        document.getElementById('listar-agendas-btn').style.visibility = 'visible';
         document.getElementById('authorize_button').innerText = 'Refresh';
         await listUpcomingEvents();
     };
@@ -87,40 +88,9 @@ function handleSignoutClick() {
         document.getElementById('content').innerText = '';
         document.getElementById('authorize_button').innerText = 'Authorize';
         document.getElementById('signout_button').style.visibility = 'hidden';
+        document.getElementById('listar-agendas-btn').style.visibility = 'hidden';
         document.getElementById('criarReuniao_button').style.visibility = 'hidden';
     }
-}
-
-/**
- * Lista os próximos eventos do calendário do usuário autorizado.
- */
-async function listUpcomingEvents() {
-    let response;
-    try {
-        const request = {
-            'calendarId': 'rafael.bezerra@totvs.com.br',
-            'timeMin': (new Date()).toISOString(),
-            'showDeleted': false,
-            'singleEvents': true,
-            'maxResults': 10,
-            'orderBy': 'startTime',
-        };
-        response = await gapi.client.calendar.events.list(request);
-    } catch (err) {
-        document.getElementById('content').innerText = err.message;
-        return;
-    }
-
-    const events = response.result.items;
-    if (!events || events.length == 0) {
-        document.getElementById('content').innerText = 'Nenhum evento encontrado.';
-        return;
-    }
-
-    const output = events.reduce(
-        (str, event) => `${str}${event.summary} (${event.start.dateTime || event.start.date})\n`,
-        'Eventos:\n');
-    document.getElementById('content').innerText = output;
 }
 
 /**
@@ -130,7 +100,7 @@ async function criarReuniao() {
     const titulo = document.getElementById('titulo').value;
     const dataInicio = document.getElementById('dataInicio').value;
     const horaInicio = document.getElementById('horaInicio').value;
-    const duracaoHoras = parseInt(document.getElementById('duracaoHoras').value);
+    const horaFim = document.getElementById('horaFim').value;
     const participantes = document.getElementById('participantes').value.split(',').map(email => email.trim());
 
     try {
@@ -138,11 +108,11 @@ async function criarReuniao() {
         const evento = {
             summary: titulo,
             start: {
-                dateTime: `${dataInicio}T${horaInicio}:00`,
+                dateTime: `${dataInicio}T${horaInicio}:00-03:00`, // Formato: 'YYYY-MM-DDTHH:mm:ss' com fuso horário fixo para São Paulo
                 timeZone: 'America/Sao_Paulo'
             },
             end: {
-                dateTime: calcularDataFim(dataInicio, horaInicio, duracaoHoras),
+                dateTime: `${dataInicio}T${horaFim}:00-03:00`, // Formato: 'YYYY-MM-DDTHH:mm:ss' com fuso horário fixo para São Paulo
                 timeZone: 'America/Sao_Paulo'
             },
             attendees: participantes.map(email => ({ email })),
@@ -171,13 +141,17 @@ async function criarReuniao() {
     }
 }
 
+// Função para exibir mensagens
+function exibirMensagem(mensagem) {
+    document.getElementById('mensagem').textContent = mensagem;
+}
 
-// Função auxiliar para calcular a data e hora de fim da reunião
-function calcularDataFim(dataInicio, horaInicio, duracaoHoras) {
-    const data = new Date(dataInicio + 'T' + horaInicio + ':00');
-    data.setHours(data.getHours() + duracaoHoras);
-    return data.toISOString().replace('.000Z', ''); // Formato: 'YYYY-MM-DDTHH:mm:ss'
-  }
+// Função para exibir mensagens
+function exibirMensagem(mensagem) {
+    document.getElementById('mensagem').textContent = mensagem;
+}
+
+
 
 // Função para listar as agendas do Google Calendar
 async function listarAgendas() {
@@ -228,4 +202,42 @@ async function listarAgendas() {
   // Associar o evento de clique ao botão
   const btnListarAgendas = document.getElementById('listar-agendas-btn');
   btnListarAgendas.addEventListener('click', mostrarAgendas);
-  
+
+  // Função para verificar se há reuniões marcadas em um dia específico
+async function verificarReunioesNoDia(data) {
+    try {
+        // Formata a data para o formato usado pela API (YYYY-MM-DD)
+        const dataFormatada = data.toISOString().slice(0, 10);
+        const timeMin = `${dataFormatada}T00:00:00Z`;
+        const timeMax = `${dataFormatada}T23:59:59Z`;
+
+        // Faz a requisição para listar os eventos do dia
+        const resposta = await gapi.client.calendar.events.list({
+            calendarId: 'primary',
+            timeMin: timeMin,
+            timeMax: timeMax,
+            singleEvents: true,
+            orderBy: 'startTime'
+        });
+
+        // Retorna true se houver eventos, false caso contrário
+        return resposta.result.items.length > 0;
+
+    } catch (erro) {
+        console.error('Erro ao verificar reuniões:', erro);
+        return false; // Ou você pode lançar um erro para tratamento posterior
+    }
+}
+
+// Exemplo de utilização da função verificarReunioesNoDia
+const dataEscolhida = new Date('2023-12-20'); // Substitua pela data desejada
+verificarReunioesNoDia(dataEscolhida)
+    .then(temReunioes => {
+        if (temReunioes) {
+            console.log('Existem reuniões marcadas neste dia.');
+            // Faça algo aqui, por exemplo, exibir uma mensagem ao usuário
+        } else {
+            console.log('Não há reuniões marcadas neste dia.');
+            // Faça algo aqui, por exemplo, permitir que o usuário crie uma reunião
+        }
+    });
