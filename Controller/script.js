@@ -171,6 +171,7 @@ async function criarReuniao() {
     }
 }
 
+
 // Função auxiliar para calcular a data e hora de fim da reunião
 function calcularDataFim(dataInicio, horaInicio, duracaoHoras) {
     const data = new Date(dataInicio + 'T' + horaInicio + ':00');
