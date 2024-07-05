@@ -103,16 +103,45 @@ async function criarReuniao() {
     const horaFim = document.getElementById('horaFim').value;
     const participantes = document.getElementById('participantes').value.split(',').map(email => email.trim());
 
+    const emailUsuario = participantes[0]; // Supondo que o primeiro participante é o organizador
+    const dataCalendarUsuario = new Date(dataInicio);
+    const horariosReunioes = await obterHorariosReunioes(emailUsuario, dataCalendarUsuario);
+
+    const inicioNovoEvento = new Date(`${dataInicio}T${horaInicio}:00-03:00`);
+    const fimNovoEvento = new Date(`${dataInicio}T${horaFim}:00-03:00`);
+
+    // Verifica se há conflitos de horário
+    const conflito = horariosReunioes.some(horario => {
+        const inicioEventoExistente = horario.inicio;
+        const fimEventoExistente = horario.fim;
+
+        // Verifica se há sobreposição de horários
+        if (
+            (inicioNovoEvento >= inicioEventoExistente && inicioNovoEvento < fimEventoExistente) ||
+            (fimNovoEvento > inicioEventoExistente && fimNovoEvento <= fimEventoExistente) ||
+            (inicioNovoEvento <= inicioEventoExistente && fimNovoEvento >= fimEventoExistente)
+        ) {
+            return true; 
+        }
+
+        return false; 
+    });
+
+    if (conflito) {
+        exibirMensagem('Conflito de horário: já existe uma reunião nesse horário.');
+        return;
+    }
+
     try {
-        // Crie o objeto do evento
+    
         const evento = {
             summary: titulo,
             start: {
-                dateTime: `${dataInicio}T${horaInicio}:00-03:00`, // Formato: 'YYYY-MM-DDTHH:mm:ss' com fuso horário fixo para São Paulo
+                dateTime: `${dataInicio}T${horaInicio}:00-03:00`,
                 timeZone: 'America/Sao_Paulo'
             },
             end: {
-                dateTime: `${dataInicio}T${horaFim}:00-03:00`, // Formato: 'YYYY-MM-DDTHH:mm:ss' com fuso horário fixo para São Paulo
+                dateTime: `${dataInicio}T${horaFim}:00-03:00`,
                 timeZone: 'America/Sao_Paulo'
             },
             attendees: participantes.map(email => ({ email })),
@@ -125,7 +154,7 @@ async function criarReuniao() {
             }
         };
 
-        // Crie a reunião
+       
         const resposta = await gapi.client.calendar.events.insert({
             calendarId: 'primary',
             resource: evento
@@ -141,103 +170,97 @@ async function criarReuniao() {
     }
 }
 
-// Função para exibir mensagens
 function exibirMensagem(mensagem) {
     document.getElementById('mensagem').textContent = mensagem;
 }
 
-// Função para exibir mensagens
-function exibirMensagem(mensagem) {
-    document.getElementById('mensagem').textContent = mensagem;
-}
-
-
-
-// Função para listar as agendas do Google Calendar
+/**
+ * Função para listar agendas.
+ */
 async function listarAgendas() {
     try {
-      const resposta = await gapi.client.calendar.calendarList.list();
-      const agendas = resposta.result.items;
-  
-      if (agendas.length) {
-        console.log("Suas agendas disponíveis:");
-        agendas.forEach((agenda) => {
-          console.log("- " + agenda.summary);
-        });
-      } else {
-        console.log("Você não possui agendas.");
-      }
-  
-      return agendas;
-    } catch (erro) {
-      console.error("Ocorreu um erro ao listar as agendas:", erro);
-      return [];
-    }
-  }
-  
-  // Manipular o resultado da função listarAgendas()
-  function mostrarAgendas() {
-    listarAgendas().then((agendas) => {
-      const agendasContainer = document.getElementById('agendas-list');
-  
-      if (agendas.length) {
-        agendasContainer.innerHTML = '<h3>Suas agendas disponíveis:</h3>';
-        const ul = document.createElement('ul');
-  
-        agendas.forEach((agenda) => {
-          const li = document.createElement('li');
-          li.textContent = agenda.summary;
-          ul.appendChild(li);
-        });
-  
-        agendasContainer.appendChild(ul);
-      } else {
-        agendasContainer.textContent = 'Você não possui agendas.';
-      }
-    }).catch((erro) => {
-      console.error('Ocorreu um erro ao listar as agendas:', erro);
-    });
-  }
-  
-  // Associar o evento de clique ao botão
-  const btnListarAgendas = document.getElementById('listar-agendas-btn');
-  btnListarAgendas.addEventListener('click', mostrarAgendas);
+        const resposta = await gapi.client.calendar.calendarList.list();
+        const agendas = resposta.result.items;
 
-  // Função para verificar se há reuniões marcadas em um dia específico
-async function verificarReunioesNoDia(data) {
+        if (agendas.length) {
+            console.log("Suas agendas disponíveis:");
+            agendas.forEach((agenda) => {
+                console.log("- " + agenda.summary);
+            });
+        } else {
+            console.log("Você não possui agendas.");
+        }
+
+        return agendas;
+    } catch (erro) {
+        console.error("Ocorreu um erro ao listar as agendas:", erro);
+        return [];
+    }
+}
+
+/**
+ * Tratar o retorno das agendas retornadas
+ */
+function mostrarAgendas() {
+    listarAgendas().then((agendas) => {
+        const agendasContainer = document.getElementById('agendas-list');
+
+        if (agendas.length) {
+            agendasContainer.innerHTML = '<h3>Suas agendas disponíveis:</h3>';
+            const ul = document.createElement('ul');
+
+            agendas.forEach((agenda) => {
+                const li = document.createElement('li');
+                li.textContent = agenda.summary;
+                ul.appendChild(li);
+            });
+
+            agendasContainer.appendChild(ul);
+        } else {
+            agendasContainer.textContent = 'Você não possui agendas.';
+        }
+    }).catch((erro) => {
+        console.error('Ocorreu um erro ao listar as agendas:', erro);
+    });
+}
+
+const btnListarAgendas = document.getElementById('listar-agendas-btn');
+btnListarAgendas.addEventListener('click', mostrarAgendas);
+
+/**
+ * Função para retornar o horario de reunioes especificas
+ */
+async function obterHorariosReunioes(emailUsuario, data) {
     try {
-        // Formata a data para o formato usado pela API (YYYY-MM-DD)
+        
         const dataFormatada = data.toISOString().slice(0, 10);
         const timeMin = `${dataFormatada}T00:00:00Z`;
         const timeMax = `${dataFormatada}T23:59:59Z`;
 
-        // Faz a requisição para listar os eventos do dia
+        
         const resposta = await gapi.client.calendar.events.list({
-            calendarId: 'primary',
+            calendarId: emailUsuario,
             timeMin: timeMin,
             timeMax: timeMax,
             singleEvents: true,
             orderBy: 'startTime'
         });
 
-        // Retorna true se houver eventos, false caso contrário
-        return resposta.result.items.length > 0;
+        
+        const horariosReunioes = [];
+
+        
+        for (const evento of resposta.result.items) {
+            const inicioEvento = new Date(evento.start.dateTime);
+            const fimEvento = new Date(evento.end.dateTime);
+
+            horariosReunioes.push({ inicio: inicioEvento, fim: fimEvento });
+        }
+
+        return horariosReunioes;
 
     } catch (erro) {
-        console.error('Erro ao verificar reuniões:', erro);
-        return false; // Ou você pode lançar um erro para tratamento posterior
+        console.error('Erro ao obter horários de reuniões:', erro);
+        return []; 
     }
 }
-
-// Exemplo de utilização da função verificarReunioesNoDia
-const dataEscolhida = new Date('2023-12-20'); // Substitua pela data desejada
-verificarReunioesNoDia(dataEscolhida)
-    .then(temReunioes => {
-        if (temReunioes) {
-            console.log('Existem reuniões marcadas neste dia.');
-            // Faça algo aqui, por exemplo, exibir uma mensagem ao usuário
-        } else {
-            console.log('Não há reuniões marcadas neste dia.');
-            // Faça algo aqui, por exemplo, permitir que o usuário crie uma reunião
-        }
-    });

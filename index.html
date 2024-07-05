@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Google Calendar API Quickstart</title>
-    <link rel="stylesheet" href="/Styles/style.css"> <!-- Certifique-se de ajustar o caminho conforme necessário -->
+    <link rel="stylesheet" href="/Styles/style.css"> 
 </head>
 <body>
     <p>Agendamento com Google Calendar</p>
@@ -41,8 +41,11 @@
         <hr>
 
         <!-- Verificar reuniões -->
-        <label for="data">Escolha uma data para verificar reuniões:</label>
-        <input type="date" id="data" name="data">
+        <label for="emailUsuario">Email do Usuário:</label>
+        <input type="email" id="emailUsuario" name="emailUsuario" required>
+
+        <label for="dataCalendarUsuario">Escolha uma data para verificar reuniões:</label>
+        <input type="date" id="dataCalendarUsuario" name="dataCalendarUsuario" required>
         <button onclick="verificarEExibirResultado()">Verificar Reuniões</button>
         <div id="mensagemVerificacao"></div>
     </div>
@@ -56,18 +59,31 @@
     <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
     <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
     <script>
-        // Função para verificar e exibir o resultado de reuniões no dia escolhido
-        function verificarEExibirResultado() {
-            const dataEscolhida = new Date(document.getElementById('data').value);
-            verificarReunioesNoDia(dataEscolhida)
-                .then(temReunioes => {
-                    const mensagemDiv = document.getElementById('mensagemVerificacao');
-                    if (temReunioes) {
-                        mensagemDiv.textContent = 'Existem reuniões marcadas neste dia.';
-                    } else {
-                        mensagemDiv.textContent = 'Não há reuniões marcadas neste dia.';
-                    }
+        async function verificarEExibirResultado() {
+            const emailUsuario = document.getElementById('emailUsuario').value;
+            const dataCalendarUsuario = new Date(document.getElementById('dataCalendarUsuario').value);
+
+            if (!emailUsuario) {
+                document.getElementById('mensagemVerificacao').textContent = 'Por favor, insira um email válido.';
+                return;
+            }
+
+            if (isNaN(dataCalendarUsuario.getTime())) {
+                document.getElementById('mensagemVerificacao').textContent = 'Por favor, selecione uma data válida.';
+                return;
+            }
+
+            const horariosReunioes = await obterHorariosReunioes(emailUsuario, dataCalendarUsuario);
+
+            if (horariosReunioes.length > 0) {
+                let mensagem = 'Horários das reuniões neste dia:\n';
+                horariosReunioes.forEach((horario, index) => {
+                    mensagem += `${index + 1}. Início: ${horario.inicio.toLocaleTimeString()}, Fim: ${horario.fim.toLocaleTimeString()}\n`;
                 });
+                document.getElementById('mensagemVerificacao').textContent = mensagem;
+            } else {
+                document.getElementById('mensagemVerificacao').textContent = 'Não há reuniões marcadas neste dia.';
+            }
         }
     </script>
 </body>
