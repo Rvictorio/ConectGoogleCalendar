@@ -9,10 +9,6 @@ let tokenClient;
 let gapiInited = false;
 let gisInited = false;
 
-document.getElementById('authorize_button').style.visibility = 'hidden';
-document.getElementById('signout_button').style.visibility = 'hidden';
-document.getElementById('criarReuniao_button').style.visibility = 'hidden';
-document.getElementById('listar-agendas-btn').style.visibility = 'hidden';
 
 /**
  * Carrega o cliente da API do Google quando o gapi é carregado.
@@ -64,9 +60,16 @@ function handleAuthClick() {
             throw (resp);
         }
         document.getElementById('signout_button').style.visibility = 'visible';
+        document.getElementById('authorize_button').innerText = 'Refresh';
+        
+        // Mostrar as divs ao ser autenticado
+        document.getElementById('criarReuniao').style.display = 'block';
+        document.getElementById('agendas-list').style.display = 'block';
+        document.getElementById('verificarReuniao').style.display = 'block';
+        
         document.getElementById('criarReuniao_button').style.visibility = 'visible';
         document.getElementById('listar-agendas-btn').style.visibility = 'visible';
-        document.getElementById('authorize_button').innerText = 'Refresh';
+        
         await listUpcomingEvents();
     };
 
@@ -90,6 +93,11 @@ function handleSignoutClick() {
         document.getElementById('signout_button').style.visibility = 'hidden';
         document.getElementById('listar-agendas-btn').style.visibility = 'hidden';
         document.getElementById('criarReuniao_button').style.visibility = 'hidden';
+        
+        // Esconder as divs ao deslogar
+        document.getElementById('criarReuniao').style.display = 'none';
+        document.getElementById('agendas-list').style.display = 'none';
+        document.getElementById('verificarReuniao').style.display = 'none';
     }
 }
 
@@ -170,9 +178,7 @@ async function criarReuniao() {
     }
 }
 
-function exibirMensagem(mensagem) {
-    document.getElementById('mensagem').textContent = mensagem;
-}
+
 
 /**
  * Função para listar agendas.
@@ -197,36 +203,6 @@ async function listarAgendas() {
         return [];
     }
 }
-
-/**
- * Tratar o retorno das agendas retornadas
- */
-function mostrarAgendas() {
-    listarAgendas().then((agendas) => {
-        const agendasContainer = document.getElementById('agendas-list');
-
-        if (agendas.length) {
-            agendasContainer.innerHTML = '<h3>Suas agendas disponíveis:</h3>';
-            const ul = document.createElement('ul');
-
-            agendas.forEach((agenda) => {
-                const li = document.createElement('li');
-                li.textContent = agenda.summary;
-                ul.appendChild(li);
-            });
-
-            agendasContainer.appendChild(ul);
-        } else {
-            agendasContainer.textContent = 'Você não possui agendas.';
-        }
-    }).catch((erro) => {
-        console.error('Ocorreu um erro ao listar as agendas:', erro);
-    });
-}
-
-const btnListarAgendas = document.getElementById('listar-agendas-btn');
-btnListarAgendas.addEventListener('click', mostrarAgendas);
-
 /**
  * Função para retornar o horario de reunioes especificas
  */
@@ -262,5 +238,164 @@ async function obterHorariosReunioes(emailUsuario, data) {
     } catch (erro) {
         console.error('Erro ao obter horários de reuniões:', erro);
         return []; 
+    }
+}
+
+/**
+ * Tratar o retorno das agendas retornadas
+ */
+function mostrarAgendas() {
+    listarAgendas().then((agendas) => {
+        const agendasContainer = document.getElementById('agendas-list');
+
+        if (agendas.length) {
+            agendasContainer.innerHTML = '<h3>Suas agendas disponíveis:</h3>';
+            const ul = document.createElement('ul');
+
+            agendas.forEach((agenda) => {
+                const li = document.createElement('li');
+                li.textContent = agenda.summary;
+                ul.appendChild(li);
+            });
+
+            agendasContainer.appendChild(ul);
+        } else {
+            agendasContainer.textContent = 'Você não possui agendas.';
+        }
+    }).catch((erro) => {
+        console.error('Ocorreu um erro ao listar as agendas:', erro);
+    });
+}
+const btnListarAgendas = document.getElementById('listar-agendas-btn');
+    btnListarAgendas.addEventListener('click', mostrarAgendas);
+
+function exibirMensagem(mensagem) {
+    const modal = document.getElementById('messageModal');
+    const span = document.getElementsByClassName('close')[0];
+    const modalMessage = document.getElementById('modalMessage');
+
+    modalMessage.textContent = mensagem;
+    modal.style.display = 'block';
+
+    span.onclick = function() {
+        modal.style.display = 'none';
+    };
+
+    window.onclick = function(event) {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    };
+}
+
+async function encontrarReuniao(identificador) {
+    try {
+        // Realiza uma consulta na API do Google Calendar para buscar o evento
+        const resposta = await gapi.client.calendar.events.get({
+            calendarId: 'primary', // Ou o ID da agenda específica
+            eventId: identificador // Pode ser o ID do evento, nome (summary) ou email de participante
+        });
+
+        if (resposta.status === 200) {
+            return resposta.result; // Retorna o objeto do evento encontrado
+        } else {
+            console.error('Erro ao encontrar a reunião:', resposta);
+            return null;
+        }
+    } catch (erro) {
+        console.error('Erro ao encontrar a reunião:', erro);
+        return null;
+    }
+}
+async function atualizarReuniao(identificador, novaData, novoHorarioInicio, novoHorarioFim) {
+    try {
+        // Busca a reunião com o identificador fornecido
+        const reuniao = await encontrarReuniao(identificador);
+
+        if (!reuniao) {
+            console.error("Reunião não encontrada.");
+            return;
+        }
+
+        // Atualiza a data e horário da reunião
+        reuniao.start.dateTime = `${novaData}T${novoHorarioInicio}:00-03:00`;
+        reuniao.end.dateTime = `${novaData}T${novoHorarioFim}:00-03:00`;
+
+        // Utiliza a API do Google Calendar para atualizar a reunião
+        const resposta = await gapi.client.calendar.events.update({
+            calendarId: 'primary', // Ou o ID da agenda específica
+            eventId: reuniao.id,
+            resource: reuniao
+        });
+
+        console.log('Reunião atualizada com sucesso:', resposta.result.htmlLink);
+    } catch (erro) {
+        console.error('Erro ao atualizar a reunião:', erro);
+    }
+}
+
+async function listarReunioesAtivas(emailUsuario, data) {
+    try {
+        // Formata a data para o formato aceito pela API (YYYY-MM-DD)
+        const dataFormatada = data.toISOString().slice(0, 10); 
+        const timeMin = `${dataFormatada}T00:00:00Z`;
+        const timeMax = `${dataFormatada}T23:59:59Z`;
+
+        // Chama a API para listar os eventos do dia
+        const resposta = await gapi.client.calendar.events.list({
+            calendarId: 'primary', // Substitua por 'emailUsuario' se quiser buscar em uma agenda específica
+            timeMin: timeMin,
+            timeMax: timeMax,
+            singleEvents: true,
+            orderBy: 'startTime'
+        });
+
+        // Filtra os eventos para retornar apenas os que o usuário participa
+        const reunioesAtivas = resposta.result.items.filter(evento => {
+            return evento.attendees && evento.attendees.some(participante => participante.email === emailUsuario);
+        });
+
+        // Formata a resposta para retornar título, data/hora e participantes
+        return reunioesAtivas.map(evento => ({
+            titulo: evento.summary,
+            inicio: evento.start.dateTime,
+            fim: evento.end.dateTime,
+            participantes: evento.attendees.map(participante => participante.email)
+        }));
+
+    } catch (erro) {
+        console.error('Erro ao listar reuniões ativas:', erro);
+        return []; // Retorna um array vazio em caso de erro
+    }
+}
+
+async function buscarReunioes() {
+    const emailUsuario = document.getElementById('emailUsuario').value;
+    const dataReuniao = new Date(document.getElementById('dataReuniao').value);
+
+    if (!emailUsuario || !dataReuniao) {
+        alert('Por favor, preencha o email e a data.');
+        return;
+    }
+
+    const reunioes = await listarReunioesAtivas(emailUsuario, dataReuniao);
+
+    // Aqui você pode exibir as reuniões na página, por exemplo, em uma lista
+    const listaReunioes = document.getElementById('listaReunioes'); // Substitua pelo ID do elemento onde você quer exibir a lista
+    listaReunioes.innerHTML = ''; // Limpa a lista anterior
+
+    if (reunioes.length === 0) {
+        listaReunioes.innerHTML = '<p>Nenhuma reunião encontrada para este dia.</p>';
+    } else {
+        reunioes.forEach(reuniao => {
+            const itemLista = document.createElement('li');
+            itemLista.innerHTML = `
+                <b>${reuniao.titulo}</b><br>
+                Início: ${reuniao.inicio}<br>
+                Fim: ${reuniao.fim}<br>
+                Participantes: ${reuniao.participantes.join(', ')}
+            `;
+            listaReunioes.appendChild(itemLista);
+        });
     }
 }
