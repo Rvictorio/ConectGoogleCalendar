@@ -92,3 +92,22 @@ input, textarea {
     text-decoration: none;
     cursor: pointer;
 }
+select {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: #fff;
+    appearance: none; /* Remove o estilo padrão do navegador */
+    -webkit-appearance: none; /* Para Safari */
+    -moz-appearance: none; /* Para Firefox */
+    cursor: pointer;
+}
+
+/* Estilo para o option */
+select option {
+    padding: 10px;
+    font-size: 16px;
+}

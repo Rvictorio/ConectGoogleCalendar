@@ -14,17 +14,20 @@
 
         <div class="container" id="loginPage">
         <header id="loginHeader" >
-        <p>Agendamento com Google Calendar</p>
+        <h1>Agendamento com Google Calendar</h1>
         </header>
+
+       
     
         <button id="authorize_button" onclick="handleAuthClick()">Autorização</button>
         <button id="signout_button" onclick="handleSignoutClick()">Sair do login</button>
-        <button id="listar-agendas-btn">Listar Agendas</button>   
+       
     
         </div>
 
         <div class="container" id="criarReuniao">        
             <div id="criaReuniao">
+                <h2>Criação de reunião:</h2>
             <label for="titulo">Título:</label>
             <input type="text" id="titulo" name="titulo" required>
 
@@ -44,60 +47,41 @@
                 </div> 
         </div>
 
-        <div class="container" id="reunioesAtivas">
-        <div id="reunioes-ativas">
-
-           <h1>Buscar Reuniões</h1>
-        <form onsubmit="event.preventDefault(); buscarReunioes();">
-        <label for="emailUsuario">Email do Usuário:</label>
-        <input type="email" id="emailUsuario" required>
-        <br>
-        <label for="dataReuniao">Data da Reunião:</label>
-        <input type="date" id="dataReuniao" required>
-        <br>
-        <button onclick="buscarReunioes()">Buscar Reuniões</button>
-    </form>
-
-    <h2>Lista de Reuniões</h2>
-    <ul id="listaReunioes"></ul>
-
-        </div>
-        </div>
-
         <div class="container" id="atualizarReuniao">
-            <div id="atualizarReuniao">
-                <h3>Atualizar Reunião Existente</h3>
-                <label for="identificador">Identificador (ID do evento, nome ou email de participante):</label>
-                <input type="text" id="identificador"><br><br>
-                <label for="novaData">Nova Data:</label>
-                <input type="date" id="novaData"><br><br>
-                <label for="novoHorarioInicio">Novo Horário de Início:</label>
-                <input type="time" id="novoHorarioInicio"><br><br>
-                <label for="novoHorarioFim">Novo Horário de Fim:</label>
-                <input type="time" id="novoHorarioFim"><br><br>
-                <button id="atualizarReuniao-btn" onclick="atualizarReuniao()">Atualizar Reunião</button>
-            </div>
+            <h1>Reuniões Ativas</h1>
+
+            <div>
+                <input type="text" id="emailUsuario" placeholder="Email do usuário">
+                <input type="date" id="dataReuniao">
+                <button onclick="buscarReunioes()">Listar Reuniões do Dia</button>               
             </div>
 
-        <div class="container" id="verificarReuniao" >
-        <!-- Verificar reuniões -->
-        <div id="verificarReuniao">
-        <label for="emailUsuario">Email do usuário:</label>
-        <input type="email" id="emailUsuario" name="emailUsuario" required>
 
-    <label for="dataCalendarUsuario">Escolha uma data para verificar reuniões:</label>
-    <input type="date" id="dataCalendarUsuario" name="dataCalendarUsuario" required>
-    <button id="verificarResult-btn" onclick="verificarEExibirResultado()">Verificar Reuniões</button>
-    
-    <div id="mensagemVerificacao"></div>
-    </div> 
+            <select id="listaReunioes">
+                <option value="" disabled selected>Selecione uma reunião</option>
+            </select>
+          
+                        <h2>Editar Reunião</h2>
+            <label for="data">Data:</label>
+            <input type="date" id="data"><br>
 
+            <label for="hora">Hora:</label>
+            <input type="time" id="hora"><br>
+
+            <label for="participantes">Participantes (separados por vírgula):</label>
+            <input type="text" id="participantes"><br>
+
+            <label for="local">Local:</label>
+            <input type="text" id="local"><br>
+
+            <label for="descricao">Descrição:</label>
+            <textarea id="descricao"></textarea><br>
+
+            <button id="salvarEdicao">Salvar Edição</button>
         </div>
 
-        <div class="container" id="agendas-list">
-            <!-- Conteúdo para listar agendas -->
-        </div>
-    
+        
+
         <div id="messageModal" class="modal">
             <div class="modal-content">
                 <span class="close">&times;</span>
@@ -107,8 +91,9 @@
 
     <script src="/Controller/script.js"></script>
     <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
-    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
-    
-    
+    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>    
 </body>
 </html>
+
+
+    
