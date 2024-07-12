@@ -90,7 +90,7 @@ async function criarReuniao() {
     const horaFim = document.getElementById('horaFim').value;
     const participantes = document.getElementById('participantes').value.split(',').map(email => email.trim());
 
-    const emailUsuario = participantes[0]; // Supondo que o primeiro participante é o organizador
+    const emailUsuario = participantes[0]; 
     const dataCalendarUsuario = new Date(dataInicio);
     const horariosReunioes = await obterHorariosReunioes(emailUsuario, dataCalendarUsuario);
 
@@ -288,53 +288,53 @@ async function buscarReunioes() {
     }
 }
 
+async function atualizarReuniao() {
+    try {
+        const eventId = document.getElementById('eventId').value;
+        const tituloAtualizacao = document.getElementById('tituloAtualizacao').value;
+        const dataAtualizacao = document.getElementById('dataAtualizacao').value;
+        const horaInicioAtualizacao = document.getElementById('horaInicioAtualizacao').value;
+        const horaFimAtualizacao = document.getElementById('horaFimAtualizacao').value;
+        const participantesAtualizacao = document.getElementById('participantesAtualizacao').value.split(',').map(email => email.trim());
+        const localAtualizacao = document.getElementById('localAtualizacao').value;
+        const descricaoAtualizacao = document.getElementById('descricaoAtualizacao').value;
 
-// async function atualizarReuniao(identificador, novaData, novoHorarioInicio, novoHorarioFim) {
-//     try { 
+        const evento = {
+            summary: tituloAtualizacao,
+            start: {
+                dateTime: `${dataAtualizacao}T${horaInicioAtualizacao}:00-03:00`,
+                timeZone: 'America/Sao_Paulo'
+            },
+            end: {
+                dateTime: `${dataAtualizacao}T${horaFimAtualizacao}:00-03:00`,
+                timeZone: 'America/Sao_Paulo'
+            },
+            attendees: participantesAtualizacao.map(email => ({ email })),
+            location: localAtualizacao,
+            description: descricaoAtualizacao,
+            reminders: {
+                useDefault: false,
+                overrides: [
+                    { method: 'email', minutes: 24 * 60 },
+                    { method: 'popup', minutes: 15 }
+                ]
+            }
+        };
 
-//         if (!reuniao) {
-//             console.error("Reunião não encontrada.");
-//             return;
-//         }
+        const resposta = await gapi.client.calendar.events.update({
+            calendarId: 'primary',
+            eventId: eventId, 
+            resource: evento
+        });
 
-        
-//         reuniao.start.dateTime = `${novaData}T${novoHorarioInicio}:00-03:00`;
-//         reuniao.end.dateTime = `${novaData}T${novoHorarioFim}:00-03:00`;
-
+        exibirMensagem('Reunião atualizada com sucesso:', resposta.result.htmlLink);
        
-//         const resposta = await gapi.client.calendar.events.update({ 
-//             eventId: evento.id,
-//             titulo: evento.summary,
-//             inicio: evento.start.dateTime,
-//             fim: evento.end.dateTime,
-//             participantes: evento.attendees.map(participante => participante.email)
-//         });
-
-//         console.log('Reunião atualizada com sucesso:', resposta.result.htmlLink);
-//     } catch (erro) {
-//         console.error('Erro ao atualizar a reunião:', erro);
-//     }
-// }
+    } catch (erro) {
+        exibirMensagem('Erro ao atualizar a reunião:', erro);
+    }
+}
 
 
-//   async function encontrarReuniao(identificador) {
-//     try {
-//         const resposta = await gapi.client.calendar.events.get({
-//             calendarId: 'primary', 
-//             eventId: identificador 
-//         });
-
-//         if (resposta.status === 200) {
-//             return resposta.result; 
-//         } else {
-//             console.error('Erro ao encontrar a reunião:', resposta);
-//             return null;
-//         }
-//     } catch (erro) {
-//         console.error('Erro ao encontrar a reunião:', erro);
-//         return null;
-//     }
-// }
 
 
 
