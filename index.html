@@ -47,7 +47,7 @@
                 </div> 
         </div>
 
-        <div class="container" id="atualizarReuniao">
+        <div class="container" id="reunioesAtivas">
             <h1>Reuniões Ativas</h1>
 
             <div>
@@ -60,27 +60,37 @@
             <select id="listaReunioes">
                 <option value="" disabled selected>Selecione uma reunião</option>
             </select>
-          
-                        <h2>Editar Reunião</h2>
-            <label for="data">Data:</label>
-            <input type="date" id="data"><br>
-
-            <label for="hora">Hora:</label>
-            <input type="time" id="hora"><br>
-
-            <label for="participantes">Participantes (separados por vírgula):</label>
-            <input type="text" id="participantes"><br>
-
-            <label for="local">Local:</label>
-            <input type="text" id="local"><br>
-
-            <label for="descricao">Descrição:</label>
-            <textarea id="descricao"></textarea><br>
-
-            <button id="salvarEdicao">Salvar Edição</button>
         </div>
 
-        
+        <div class="container" id="atualizarReuniao">
+                        <h1>Editar Reunião</h1>
+
+                        <label for="eventId">Event ID:</label>
+                        <input type="text" id="eventId" required>
+                    
+            <label for="tituloAtualizacao">Titulo:</label>
+            <input type="text" id="tituloAtualizacao"><br>
+
+            <label for="dataAtualizacao">Data:</label>
+            <input type="date" id="dataAtualizacao"><br>
+
+            <label for="horaInicioAtualizacao">Horário de inicialização:</label>
+            <input type="time" id="horaInicioAtualizacao"><br>
+
+            <label for="horaFimAtualizacao">Horário de finalização:</label>
+            <input type="time" id="horaFimAtualizacao"><br>
+
+            <label for="participantesAtualizacao">Participantes (separados por vírgula):</label>
+            <input type="text" id="participantesAtualizacao"><br>
+
+            <label for="localAtualizacao">Local:</label>
+            <input type="text" id="localAtualizacao"><br>
+
+            <label for="descricaoAtualizacao">Descrição:</label>
+            <textarea id="descricaoAtualizacao"></textarea><br>
+
+            <button onclick="atualizarReuniao()">Salvar Edição</button>
+        </div>
 
         <div id="messageModal" class="modal">
             <div class="modal-content">
