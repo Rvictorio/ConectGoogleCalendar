@@ -7,7 +7,7 @@
     <script src="/Controller/script.js"></script>
     <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
     <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
-    <link rel="stylesheet" href="/Styles/style.css"> 
+   <link rel="stylesheet" href="/Styles/style.css"> 
 </head>
 
 <body id="geralBody">
@@ -92,6 +92,34 @@
             <button onclick="atualizarReuniao()">Salvar Edição</button>
         </div>
 
+        <div class="container" id="deletarReuniao">
+            <h2>Delete sua reunião</h2>
+
+            <div>
+                <input type="text" id="emailUsuarioDeletar" placeholder="Email do usuário">
+                <input type="date" id="dataReuniaoDeletar">
+                <button onclick="listarReunioesDelete()">Listar Reuniões do Dia</button>               
+            </div>
+
+            <select id="listaReunioesDeletar">
+                <option value="" disabled selected>Delete uma reunião</option>
+            </select>
+
+            <label for="eventIdDeletar">Event ID desta reunião:</label>
+            <input type="text" id="eventIdDeletar" disabled>
+        
+            <label for="dataDeletar">Data desta reunião:</label>
+            <input type="date" id="dataDeletar" disabled><br>
+
+            <label for="participantesDeletar">Participantes desta reunião:</label>
+            <input type="text" id="participantesDeletar" disabled><br>
+
+            <button onclick="deletarReuniao()">Deletar Reunião.</button>
+
+
+        </div>
+
+
         <div id="messageModal" class="modal">
             <div class="modal-content">
                 <span class="close">&times;</span>
@@ -99,8 +127,7 @@
             </div>
         </div>
 
-    <script src="/Controller/script.js"></script>
-    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+      <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
     <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>    
 </body>
 </html>

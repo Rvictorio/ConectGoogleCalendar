@@ -156,7 +156,6 @@ async function criarReuniao() {
         return null;
     }
 }
-
 /**
  * Função para retornar o horario de reunioes especificas
  */
@@ -190,11 +189,13 @@ async function obterHorariosReunioes(emailUsuario, data) {
         return horariosReunioes;
 
     } catch (erro) {
-        console.error('Erro ao obter horários de reuniões:', erro);
+       exibirMensagem('Erro ao obter horários de reuniões:', erro);
         return []; 
     }
 }
-
+/**
+ * Função para retornar as mensagens das funções
+ */
 function exibirMensagem(mensagem) {
     const modal = document.getElementById('messageModal');
     const span = document.getElementsByClassName('close')[0];
@@ -214,7 +215,10 @@ function exibirMensagem(mensagem) {
     };
 }
 
-async function listarReunioesAtivas(emailUsuario, data) {
+/**
+ * Função para validar as reunioes ativas em dias especificos
+ */
+async function  listarReunioesAtivas(emailUsuario, data) {
     try {
         
         const dataFormatada = data.toISOString().slice(0, 10); 
@@ -253,6 +257,9 @@ async function listarReunioesAtivas(emailUsuario, data) {
     }
 }
 
+/**
+ * Função para buscar reunioes ativas
+ */
 async function buscarReunioes() {
     const emailUsuario = document.getElementById('emailUsuario').value;
     const dataReuniao = new Date(document.getElementById('dataReuniao').value);
@@ -288,6 +295,9 @@ async function buscarReunioes() {
     }
 }
 
+/**
+ * Função para atualizar reuniões já criadas
+ */
 async function atualizarReuniao() {
     try {
         const eventId = document.getElementById('eventId').value;
@@ -333,8 +343,55 @@ async function atualizarReuniao() {
         exibirMensagem('Erro ao atualizar a reunião:', erro);
     }
 }
+/**
+ * Função que lista reunioes para delete
+ */
 
+async function listarReunioesDelete() {
+    const emailUsuario = document.getElementById('emailUsuarioDeletar').value;
+    const dataReuniao = new Date(document.getElementById('dataReuniaoDeletar').value);
 
+    if (!emailUsuario || !dataReuniao) {
+        alert('Por favor, preencha o email e a data.');
+        return;
+    }
 
+    const reunioes = await listarReunioesAtivas(emailUsuario, dataReuniao);
 
+    if (reunioes.length === 0) {
+        alert('Nenhuma reunião encontrada');        
+    }  else {
+        reunioes.forEach((reuniao, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = `${reuniao.titulo} (Início: ${reuniao.inicio})`;
+            listaReunioesDeletar.appendChild(option);
+        });
+
+        listaReunioesDeletar.addEventListener('change', (event) => {
+            const reuniaoSelecionada = reunioes[event.target.value];
+            document.getElementById('eventIdDeletar').value = reuniaoSelecionada.eventId;
+            document.getElementById('participantesDeletar').value = reuniaoSelecionada.participantes;
+            document.getElementById('dataDeletar').value = reuniaoSelecionada.inicio.split('T')[0];   
+        });
+
+    }
+}
+
+/**
+ * Função para deletar reuniões
+ */
+async function deletarReuniao(){
+    eventIdDeletar = document.getElementById('eventIdDeletar').value
+
+    try {
+      const resposta=  await gapi.client.calendar.events.delete({
+        calendarId: 'primary', 
+        eventId : eventIdDeletar
+        });
+        exibirMensagem('Evento excluído com sucesso!');
+      } catch (error) {
+        exibirMensagem('Erro ao excluir evento:', error);
+      }
+}
 
