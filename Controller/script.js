@@ -1,7 +1,7 @@
 const CLIENT_ID = '180232621156-t6romfde6nvdtuab3k8mlc35t2u045tf.apps.googleusercontent.com';
 const API_KEY = 'AIzaSyDLjC4QyhtwwxcpNxLnglpcGpVKNPzS9yE';
 const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
-const SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events';
+const SCOPES = 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/userinfo.profile';
 
 let tokenClient;
 let gapiInited = false;
@@ -28,7 +28,8 @@ function gisLoaded() {
             if (resp.error !== undefined) {
                 throw (resp);
             }
-            localStorage.setItem('google_token', JSON.stringify(gapi.client.getToken()));
+            setCookie('google_token', JSON.stringify(gapi.client.getToken()), 1);
+            await fetchUserProfile();
             onSignIn();
         },
     });
@@ -38,10 +39,10 @@ function gisLoaded() {
 
 function maybeEnableButtons() {
     if (gapiInited && gisInited) {
-        const storedToken = JSON.parse(localStorage.getItem('google_token'));
+        const storedToken = getCookie('google_token');
         if (storedToken) {
-            gapi.client.setToken(storedToken);
-            onSignIn();
+            gapi.client.setToken(JSON.parse(storedToken));
+            fetchUserProfile().then(onSignIn);
         } else {
             document.getElementById('authorize_button').style.visibility = 'visible';
         }
@@ -57,10 +58,21 @@ function handleSignoutClick() {
     if (token !== null) {
         google.accounts.oauth2.revoke(token.access_token, () => {
             gapi.client.setToken('');
-            localStorage.removeItem('google_token');
+            deleteCookie('google_token');
             onSignOut();
         });
     }
+}
+
+async function fetchUserProfile() {
+    await gapi.client.request({
+        'path': 'https://www.googleapis.com/oauth2/v1/userinfo',
+        'params': { 'alt': 'json' }
+    }).then(response => {
+        const profile = response.result;
+        document.getElementById('user_name').innerText = profile.name;
+        document.getElementById('user_image').src = profile.picture;
+    });
 }
 
 function onSignIn() {
@@ -69,6 +81,7 @@ function onSignIn() {
     document.getElementById('criarReuniao').style.display = 'block';
     document.getElementById('agendas-list').style.display = 'block';
     document.getElementById('verificarReuniao').style.display = 'block';
+    document.getElementById('user_info').style.display = 'block';
     listarReunioesAtivas();
 }
 
@@ -78,7 +91,43 @@ function onSignOut() {
     document.getElementById('criarReuniao').style.display = 'none';
     document.getElementById('agendas-list').style.display = 'none';
     document.getElementById('verificarReuniao').style.display = 'none';
+    document.getElementById('user_info').style.display = 'none';
 }
+
+// Funções auxiliares para manipulação de cookies
+function setCookie(name, value, days) {
+    const d = new Date();
+    d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+    const expires = "expires=" + d.toUTCString();
+    document.cookie = name + "=" + value + ";" + expires + ";path=/";
+}
+
+function getCookie(name) {
+    const cname = name + "=";
+    const decodedCookie = decodeURIComponent(document.cookie);
+    const ca = decodedCookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(cname) === 0) {
+            return c.substring(cname.length, c.length);
+        }
+    }
+    return "";
+}
+
+function deleteCookie(name) {
+    document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/';
+}
+
+// Chamar essas funções no carregamento da página
+window.onload = function() {
+    gapiLoaded();
+    gisLoaded();
+};
+
 
 /**
  * Adiciona rapidamente um evento ao calendário primário do usuário.
@@ -395,3 +444,27 @@ async function deletarReuniao(){
       }
 }
 
+
+async function criarAgenda() {
+    const nome = document.getElementById('nomeAgenda').value;
+    const cor = document.getElementById('corAgenda').value;
+    const fusoHorario = document.getElementById('fusoHorarioAgenda').value;
+  
+    try {
+      const novaAgenda = {
+        summary: nome,
+        calendarId: 'primary', 
+        backgroundColor: cor,
+        timeZone: fusoHorario
+      };
+  
+      const resposta = await gapi.client.calendar.calendarList.insert({
+        resource: novaAgenda
+      });
+  
+      exibirMensagem('Agenda criada com sucesso!', resposta.result);
+    } catch (error) {
+      exibirMensagem('Erro ao criar agenda: ' + error.message, error); 
+      console.error(error); 
+    }
+  }

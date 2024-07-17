@@ -16,11 +16,14 @@
         <header id="loginHeader" >
         <h1>Agendamento com Google Calendar</h1>
         </header>
-
+        <div id="user_info">
+            <img id="user_image" alt="User Image" style="width: 50px; height: 50px;">
+            <span id="user_name"></span>
+        </div>
        
-    
-        <button id="authorize_button" onclick="handleAuthClick()">Autorização</button>
-        <button id="signout_button" onclick="handleSignoutClick()">Sair do login</button>
+        <button id="authorize_button" onclick="handleAuthClick()">Authorize</button>
+        <button id="signout_button" onclick="handleSignoutClick()">Sign Out</button>
+        
        
     
         </div>
@@ -45,6 +48,29 @@
 
             <button id="criarReuniao_button" onclick="criarReuniao()">Criar Reunião</button>
                 </div> 
+        </div>
+
+        <div class="container" id="criarAgenda">
+            <h2>Criar agenda</h2>
+
+            <label for="nomeAgenda">Nome do Evento</label>
+            <input type="text" id="nomeAgenda" name="nomeAgenda" required>
+       
+        
+            <label for="corEvento">Cor do Evento</label>
+            <input type="color" id="corAgenda" name="corAgenda" required>
+        
+        
+            <label for="fusoHorarioAgenda">Fuso Horário</label>
+            <select id="fusoHorarioAgenda" name="fusoHorarioAgenda" required>
+                <option value="America/Sao_Paulo">America/São Paulo</option>
+                <option value="America/New_York">America/New York</option>
+                <option value="Europe/London">Europe/London</option>
+                <option value="Asia/Tokyo">Asia/Tokyo</option>
+            </select>
+       
+        <button onclick="criarAgenda()">Criar agenda</button>
+
         </div>
 
         <div class="container" id="reunioesAtivas">
@@ -105,6 +131,9 @@
                 <option value="" disabled selected>Delete uma reunião</option>
             </select>
 
+
+            <h2>Detalhes da reunião</h2>
+
             <label for="eventIdDeletar">Event ID desta reunião:</label>
             <input type="text" id="eventIdDeletar" disabled>
         
@@ -128,7 +157,8 @@
         </div>
 
       <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
-    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>    
+    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script> 
+    <script src="script.js"></script>   
 </body>
 </html>
 
