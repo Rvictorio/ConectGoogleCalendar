@@ -79,8 +79,6 @@ function onSignIn() {
     document.getElementById('signout_button').style.visibility = 'visible';
     document.getElementById('authorize_button').style.visibility = 'hidden';
     document.getElementById('criarReuniao').style.display = 'block';
-    document.getElementById('agendas-list').style.display = 'block';
-    document.getElementById('verificarReuniao').style.display = 'block';
     document.getElementById('user_info').style.display = 'block';
     listarReunioesAtivas();
 }
@@ -447,24 +445,91 @@ async function deletarReuniao(){
 
 async function criarAgenda() {
     const nome = document.getElementById('nomeAgenda').value;
-    const cor = document.getElementById('corAgenda').value;
-    const fusoHorario = document.getElementById('fusoHorarioAgenda').value;
-  
+    
+
     try {
-      const novaAgenda = {
-        summary: nome,
-        calendarId: 'primary', 
-        backgroundColor: cor,
-        timeZone: fusoHorario
-      };
-  
-      const resposta = await gapi.client.calendar.calendarList.insert({
-        resource: novaAgenda
+       
+        const respostaCriacao = await gapi.client.calendar.calendars.insert({
+            resource: {
+                summary: nome,
+            }
+        });
+
+        
+        exibirMensagem('Agenda criada com sucesso!', respostaCriacao.result);
+
+    } catch (error) {
+        
+        exibirMensagem('Erro ao criar agenda ou delegar permissões: ' + error.message);
+        console.error('Erro detalhado:', error);
+    }
+}
+
+async function delegarPermissao() {
+     const emailDelegado = document.getElementById('emailDelegado').value;
+     const nomeAgenda = document.getElementById('nomeAgenda').value;
+    try{
+    const regraAcesso = {
+        scope: {
+            type: 'user',
+            value: emailDelegado
+        },
+        role: 'writer'
+    };
+    const respostaDelegacao = await gapi.client.calendar.acl.insert({
+        calendarId: nomeAgenda,
+        resource: regraAcesso
+    });
+    exibirMensagem('Permissões delegadas com sucesso!');
+
+}
+catch (error) {
+    exibirMensagem('Erro ao criar agenda ou delegar permissões: ' + error.message);
+
+}
+}
+
+
+
+async function listarAgendasAtivas() {
+    try {
+        const resposta = await gapi.client.calendar.calendarList.list({
+            minAccessRole: 'owner' 
+        });
+
+        const agendas = resposta.result.items;
+
+        
+        const dropdown = document.getElementById('dropdownAgendas');
+        dropdown.innerHTML = ''; // Limpar opções existentes
+
+        agendas.forEach(agenda => {
+            const option = document.createElement('option');
+            option.value = agenda.id;
+            option.textContent = agenda.summary;
+            dropdown.appendChild(option);
+        });
+
+        return agendas;
+    } catch (error) {
+        console.error('Erro ao listar agendas:', error);
+       
+    }
+}
+
+
+  async function alterarReuniao(idAgenda, novasInformacoes) {
+    try {
+      const resposta = await gapi.client.calendar.events.patch({
+        calendarId: idAgenda,
+        eventId: idDaReuniao, // Você precisa obter o ID da reunião que será alterada
+        resource: novasInformacoes
       });
   
-      exibirMensagem('Agenda criada com sucesso!', resposta.result);
+      console.log('Reunião alterada com sucesso:', resposta.result);
+      // Exiba uma mensagem de sucesso para o usuário
     } catch (error) {
-      exibirMensagem('Erro ao criar agenda: ' + error.message, error); 
-      console.error(error); 
+      console.error('Erro ao alterar reunião:', error);
+      // Trate o erro de forma apropriada
     }
   }

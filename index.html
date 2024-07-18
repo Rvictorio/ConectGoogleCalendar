@@ -53,23 +53,15 @@
         <div class="container" id="criarAgenda">
             <h2>Criar agenda</h2>
 
-            <label for="nomeAgenda">Nome do Evento</label>
+            <label for="nomeAgenda">Nome da Agenda:</label>
             <input type="text" id="nomeAgenda" name="nomeAgenda" required>
-       
-        
-            <label for="corEvento">Cor do Evento</label>
-            <input type="color" id="corAgenda" name="corAgenda" required>
-        
-        
-            <label for="fusoHorarioAgenda">Fuso Horário</label>
-            <select id="fusoHorarioAgenda" name="fusoHorarioAgenda" required>
-                <option value="America/Sao_Paulo">America/São Paulo</option>
-                <option value="America/New_York">America/New York</option>
-                <option value="Europe/London">Europe/London</option>
-                <option value="Asia/Tokyo">Asia/Tokyo</option>
+
+            <select id="dropdownAgendas">
+                <option value="">Selecione uma agenda</option>
             </select>
-       
-        <button onclick="criarAgenda()">Criar agenda</button>
+        
+            <button onclick="listarAgendasAtivas()">Listar Agendas</button>
+        
 
         </div>
 
